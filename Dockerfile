@@ -18,6 +18,9 @@ RUN python -m venv venv && \
     . venv/bin/activate && \
     pip install --upgrade pip && \
     pip install -r requirements.txt && \
+    # PyPI oscrypto 1.3.0 cannot parse OpenSSL 3 versions on Debian Bookworm.
+    # Install the upstream fix until a patched PyPI release is available.
+    pip install --no-cache-dir git+https://github.com/wbond/oscrypto.git@d5f3437 && \
     pip install debugpy
 
 # Apply verifier.py patch inside the venv so the container runtime has the fix
