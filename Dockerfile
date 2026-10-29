@@ -1,25 +1,20 @@
-FROM ubuntu:22.04
+FROM python:3.12-slim-bookworm
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install Python and system dependencies
-# Python 3.12 via deadsnakes: Ubuntu 22.04 only ships 3.10 by default, but
-# music-assistant-client (used for MA voice-control commands) requires >=3.11.
+# Install Node.js and system dependencies.  The previous Ubuntu/deadsnakes
+# setup pulled systemd-resolved into the build; Docker mounts /etc/resolv.conf
+# in build containers, so that package fails during installation.  The official
+# Python 3.12 slim image already provides the required Python runtime.
 RUN apt-get update && \
-    apt-get install -y software-properties-common && \
-    add-apt-repository -y ppa:deadsnakes/ppa && \
-    apt-get update && \
-    apt-get install -y python3.12 python3.12-venv python3-pip libssl-dev curl gnupg ca-certificates && \
-    # Install Node.js 18 from NodeSource (ASK CLI requires a modern Node version)
-    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs && \
+    apt-get install -y --no-install-recommends nodejs npm libssl-dev curl gnupg ca-certificates && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # Copy only requirements first, then install dependencies
 COPY app/requirements.txt /app/requirements.txt
-RUN python3.12 -m venv venv && \
+RUN python -m venv venv && \
     . venv/bin/activate && \
     pip install --upgrade pip && \
     pip install -r requirements.txt && \
